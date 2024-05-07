@@ -11,6 +11,7 @@ You have probably by now heard someone say with a smug look of superiority: "Act
 This is technically true. *Causation* itself is not well-defined and has deep philosophical implications, going back to Hume at the very least.
 
 I want to take you on a journey down the rabbit hole of a certain type of causation, namely 'Granger causality'.
+Spoiler alert: it's not really causation, but it's better than pure correlation.
 
 Let's start by understanding what correlation is.
 """)
@@ -20,7 +21,7 @@ st.write("""
 """)
 
 st.write("""
-Correlation can be thought of as a normalized covariance, but what is covariance?
+Correlation can be thought of as the normalized covariance, but what is covariance?
 Intuitively, covariance measures how two random variables co-vary, i.e. how changes of magnitude $1$ in the one variable effect the other variable.
 Mathematically the covariance of random variables $X$ and $Y$ can be expressed as\n
 $$Cov(X, Y) = \mathbb{E}[(X - \mathbb{E}[X])(Y - \mathbb{E}[Y])].$$
@@ -29,6 +30,8 @@ We then obtain the correlation by normalizing over the product of the standard d
 $$\\rho_{X,Y} = \\frac{Cov(X, Y)}{\sigma_x \sigma_y}$$
 
 We do this as the standard deviations basically give us a sense for how much the variables vary on their own.
+
+If the correlation was calculated from samples of random variables, then we denote the correlation as $r$ instead of $\\rho$.
 
 Lets do a quick experiment, to get some intuition.\n
 Let $X = \mathcal{N}(0,1)$ and $Y = 2~X + \mathcal{N}(0, \epsilon)$.
@@ -53,7 +56,7 @@ correlation = np.corrcoef(x, y)[0, 1]
 
 fig, ax = plt.subplots()
 ax.scatter(x, y)
-ax.set_title(f'Covariance: {covariance:.2f}, Correlation: {correlation:.2f}')
+ax.set_title(f'$Cov(X, Y) = {covariance:.2f}$, $r_{{XY}} = {correlation:.2f}$')
 st.pyplot(fig)
 
 st.write("""
@@ -66,22 +69,26 @@ st.write("""
 Let $X = \mathcal{N}(0,1)$ and $Y = X^2 + \mathcal{N}(0, \epsilon).$
 """)
 
+noise_level2 = st.slider('Noise $\epsilon$', 0.0, 50.0, 0.0, key="non-linear")
+
 sample_size_2 = st.slider('Sample Size $n$ for non-linear relationship', 1, 100000, 50)
 
 
 x_hat = np.random.normal(0, 1, sample_size_2)
-y_hat = x_hat**2 + np.random.normal(0, noise_level, sample_size_2)
+y_hat = x_hat**2 + np.random.normal(0, noise_level2, sample_size_2)
 
 covariance = np.cov(x_hat, y_hat)[0, 1]
 correlation = np.corrcoef(x_hat, y_hat)[0, 1]
 
 fig, ax = plt.subplots()
 ax.scatter(x_hat, y_hat)
-ax.set_title(f'Covariance: {covariance:.2f}, Correlation: {correlation:.2f}')
+ax.set_title(f'$Cov(X, Y) = {covariance:.2f}$, $r_{{XY}} = {correlation:.2f}$')
 st.pyplot(fig)
 
 st.write("""
-This sucks and it is a major problem with using correlation - it only captures linear relationships.
+Notice how the correlation does not capture this parabolic relationship? With sufficiently high $n$, $r$ tends to $0$, because the relationship is not linear.
+
+This sucks and it is a major problem with using correlation. Quite frankly, I am not even sure that most researches that make use of statistics, but are not Mathematicians or Data Scientists, know this.
 
 Luckily for us, there are some other measures that can be used to capture non-linear relationships, making use of Information Theory.
 """)
@@ -170,7 +177,7 @@ st.pyplot(plt)
 st.write(f"""
 The plot above shows how a discrete time series can be plotted. As you can see, it is clearly a noisy sine function.
 The autocorrelation of $X_t$ and $X_{{t+{frequency}}}$ hence approaches $1$ if we increase the sample size.\n
-The sample autocorrelation is ${autocorrelation: .3f}$.
+The sample autocorrelation is $r = {autocorrelation: .3f}$.
 
 You can play with the lag and see how the autocorrelation changes.
 """)
@@ -178,6 +185,8 @@ st.write("""
 **What happens if the lag is a multiple of the frequency?**\n
 **What happens if the lag is a multiple of half the frequency?**
 """)
+
+frequency = st.slider('Frequency', 1, 100, 10, key="lag")
 
 lag = st.slider('Lag', 1, n_points - 1, 10)
 
@@ -197,12 +206,38 @@ ax.legend()
 
 st.pyplot(plt)
 
-st.write(f"The autocorrelation at lag {lag} is: {autocorrelation:.3f}")
+st.write(f"The autocorrelation at lag {lag} is: $r = {autocorrelation:.3f}$")
+
+st.write("# Auto-Regression")
+
+st.write("""
+After examining the auto-correlation at various time-lags, we may want to use past values to predict future values.
+This idea, predicting values at a time-step $t$ from values at earlier time-steps is usually done through *Auto-Regressive* (AR) models.
+
+Usually, we restrict ourselves to going back only a certain number of time-steps. If we use the past $p$ time-steps for our AR model, we say that the AR model is of *order* $p$. 
+Generally, we have\n
+$$X_t = c + \phi_1~X_{t-1} + \phi_2~X_{t-2} + \cdots + \phi_p~X_{t-p} + \epsilon_t$$
+
+We then fit our model to the data that we have collected by finding values for $\phi_i$ for all $i \in [1, p]$.
+
+To determine the order $p$ that is most useful, we use the auto-correlation discussed earlier.
+
+Note that some $\phi_i$ may be $0$ in the final model, essentially meaning that we do not use these time-steps at all for our prediction.
+
+""")
+#TODO: Add Sliders for displaying the best model
+st.write("""
+This is pretty neat, but we are here to talk about causality in the sense of one time-series causing another,
+so let's look at one way to do this - kind of.
+""")
+
+st.write("""
+# Granger Causality
+""")
 
 st.write("# Roadmap")
 
 st.write("""
-- Auto-Regression
 - Granger Causality
 - Transfer Entropy
 """)
