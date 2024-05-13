@@ -13,7 +13,8 @@ This is technically true. *Causation* itself is not well-defined and has deep ph
 I want to take you on a journey down the rabbit hole of a certain type of causation, namely 'Granger causality'.
 Spoiler alert: it's not really causation, but it's better than pure correlation.
 
-Let's start by understanding what correlation is.
+I will assume that you understand what correlation is.
+If you do not, refer to https://correlation.streamlit.app/#what-is-correlation, for a quick refresher.
 """)
 
 st.write("""
